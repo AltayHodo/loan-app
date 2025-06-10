@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Description
+This app automates the extraction of loan data from incoming emails, stores it in Supabase, 
+and visualizes the data on a React dashboard. The email script runs through a button click on the frontend.
 
-## Getting Started
+Notes
+- To see script in action, you can delete all the loans and run the script using the buttons
+- Keep in mind that the script takes quite a while to run on deployment, give it some time
+- Can filter the loans by date
 
-First, run the development server:
+## Deployment/Demo
+Frontend (deployed on Vercel):** [https://your-vercel-url.vercel.app](https://loan-app-teal.vercel.app/)
+Backend (deployed on Render):** [https://loan-app-2bi1.onrender.com/](https://loan-app-2bi1.onrender.com/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Supabase Schema SQL
+create table if not exists loans (
+  id uuid default uuid_generate_v4() primary key,
+  loan_id text not null,
+  borrower_name text,
+  requested_amount numeric,
+  funded_amount numeric,
+  date date,
+  message_id text unique,
+  inserted_at timestamp with time zone default now()
+);
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Email Script
+Email script is in backend/scripts/fetchEmails.js
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Manual setup instructions
+BACKEND
+1. navigate to backend/
+2. install dependencies with npm install
+3. create a .env file with this format:
+  IMAP_USER=your-email@example.com
+  IMAP_PASSWORD=your-email-password
+  IMAP_HOST=imap.yourmail.com
+  IMAP_PORT=993
+  SUPABASE_URL=https://your-project.supabase.co
+  SUPABASE_SERVICE_KEY=your-service-role-key
+4. run backend locally with node server.js
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+FRONTEND
+1. in root folder, install dependencies with npm install
+2. add .env.local file with this format:
+  NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+3. Update fetch URL in src/app/page.tsx if testing locally to- fetch('http://localhost:8080/run-email-script', { method: 'POST' })
+4. run app using npm run dev
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
