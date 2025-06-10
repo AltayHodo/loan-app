@@ -49,9 +49,12 @@ export default function HomePage() {
             onClick={async () => {
               setIsRunningScript(true);
               try {
-                const res = await fetch('/api/fetch-emails', {
-                  method: 'POST',
-                });
+                const res = await fetch(
+                  'http://localhost:8080/run-email-script',
+                  {
+                    method: 'POST',
+                  }
+                );
                 const data = await res.json();
                 alert(
                   data.success
