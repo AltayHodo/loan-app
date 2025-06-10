@@ -6,12 +6,14 @@ Notes
 - To see script in action, you can delete all the loans and run the script using the buttons
 - Keep in mind that the script takes quite a while to run on deployment, give it some time
 - Can filter the loans by date
-- Currently only works on emails that have this format as their body:
+- Currently only works on emails that have this format as their body-
+  ```
   Loan ID: 127
   Borrower: Stephen Curry
   Requested: 3000
   Funded: 2500
   Date: 2025-06-09
+  ```
 - For deployment, the script being used is in backend/scripts/fetchEmails.js, not scripts/fetchEmails.ts. Typescript was causing some issues on deployment so I rewrote it in js
 
 ## Deployment/Demo
