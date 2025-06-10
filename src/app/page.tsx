@@ -1,103 +1,162 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import LoanChart from '@/components/LoanChart';
+
+type Loan = {
+  loan_id: string;
+  borrower_name: string;
+  requested_amount: number;
+  funded_amount: number;
+  date: string;
+};
+
+export default function HomePage() {
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [filterDate, setFilterDate] = useState<string>('');
+  const [isRunningScript, setIsRunningScript] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const fetchLoans = async () => {
+    const { data, error } = await supabase.from('loans').select('*');
+    if (!error && data) setLoans(data);
+  };
+
+  useEffect(() => {
+    fetchLoans();
+  }, []);
+
+  const filteredLoans = filterDate
+    ? loans.filter((loan) => new Date(loan.date) >= new Date(filterDate))
+    : loans;
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-bold mb-8 text-center text-gray-800">
+          Loan Dashboard
+        </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="mb-6 flex flex-wrap gap-4">
+          <button
+            disabled={isRunningScript}
+            className={`bg-blue-600 text-white px-4 py-2 rounded transition ${
+              isRunningScript
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-blue-700'
+            }`}
+            onClick={async () => {
+              setIsRunningScript(true);
+              try {
+                const res = await fetch('/api/fetch-emails', {
+                  method: 'POST',
+                });
+                const data = await res.json();
+                alert(
+                  data.success
+                    ? 'Email script ran successfully!'
+                    : `Error: ${data.error}`
+                );
+                await fetchLoans();
+              } finally {
+                setIsRunningScript(false);
+              }
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {isRunningScript ? 'Running...' : 'Run Email Script'}
+          </button>
+
+          <button
+            disabled={isDeleting}
+            onClick={async () => {
+              setIsDeleting(true);
+              const { error } = await supabase
+                .from('loans')
+                .delete()
+                .neq('loan_id', '');
+              if (error) {
+                console.error('Failed to delete loans:', error.message);
+              } else {
+                setLoans([]);
+              }
+              setIsDeleting(false);
+            }}
+            className={`bg-red-600 text-white px-4 py-2 rounded transition ${
+              isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700'
+            }`}
           >
-            Read our docs
-          </a>
+            {isDeleting ? 'Deleting...' : 'Delete All Loans'}
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="date-filter"
+              className="text-sm text-gray-700 font-medium"
+            >
+              Show loans since:
+            </label>
+            <input
+              id="date-filter"
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="border border-gray-300 rounded px-2 py-1 text-sm text-gray-800"
+            />
+          </div>
+
+          {filterDate && (
+            <button
+              onClick={() => setFilterDate('')}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Clear filter
+            </button>
+          )}
+        </div>
+
+        <div className="overflow-x-auto shadow rounded-lg bg-white">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-100 text-sm font-medium text-gray-600">
+              <tr>
+                <th className="px-4 py-3 border-b">Loan ID</th>
+                <th className="px-4 py-3 border-b">Borrower</th>
+                <th className="px-4 py-3 border-b">Requested</th>
+                <th className="px-4 py-3 border-b">Funded</th>
+                <th className="px-4 py-3 border-b">Date</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-gray-700">
+              {filteredLoans.map((loan) => (
+                <tr key={loan.loan_id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 border-b">{loan.loan_id}</td>
+                  <td className="px-4 py-3 border-b">{loan.borrower_name}</td>
+                  <td className="px-4 py-3 border-b">
+                    ${loan.requested_amount}
+                  </td>
+                  <td className="px-4 py-3 border-b">${loan.funded_amount}</td>
+                  <td className="px-4 py-3 border-b">
+                    {loan.date.slice(0, 10)}
+                  </td>
+                </tr>
+              ))}
+              {filteredLoans.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-gray-400">
+                    No loans found for selected date.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-12">
+          <LoanChart loans={filteredLoans} filterDate={filterDate} />
+        </div>
+      </div>
+    </main>
   );
 }
