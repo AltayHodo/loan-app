@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/triple-slash-reference */
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /// <reference path="../types/ambient.d.ts" />
 
 const imaps = require('imap-simple');
