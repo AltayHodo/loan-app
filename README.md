@@ -8,7 +8,7 @@ Notes
 - Can filter the loans by date
 
 ## Deployment/Demo
-Frontend (deployed on Vercel):** [https://your-vercel-url.vercel.app](https://loan-app-teal.vercel.app/)
+Frontend (deployed on Vercel):** [https://loan-app-teal.vercel.app](https://loan-app-teal.vercel.app/)
 Backend (deployed on Render):** [https://loan-app-2bi1.onrender.com/](https://loan-app-2bi1.onrender.com/)
 
 ## Supabase Schema SQL
