@@ -6,6 +6,12 @@ Notes
 - To see script in action, you can delete all the loans and run the script using the buttons
 - Keep in mind that the script takes quite a while to run on deployment, give it some time
 - Can filter the loans by date
+- Currently only works on emails that have this format as their body:
+  Loan ID: 127
+  Borrower: Stephen Curry
+  Requested: 3000
+  Funded: 2500
+  Date: 2025-06-09
 
 ## Deployment/Demo
 Frontend (deployed on Vercel):** [https://loan-app-teal.vercel.app](https://loan-app-teal.vercel.app/)
