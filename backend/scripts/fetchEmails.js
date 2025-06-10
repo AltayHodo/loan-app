@@ -33,8 +33,10 @@ async function fetchEmails() {
   await connection.openBox('INBOX');
   console.log('INBOX opened');
 
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '-');
-  const searchCriteria = ['UNSEEN', ['SINCE', today]];
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const since = oneWeekAgo.toISOString().slice(0, 10).replace(/-/g, '-');
+  const searchCriteria = ['UNSEEN', ['SINCE', since]];
 
   const fetchOptions = {
     bodies: [''],
@@ -67,7 +69,6 @@ async function fetchEmails() {
     const messageId = parsed.messageId;
 
     if (!messageId) {
-      console.log('Email skipped: missing messageId.');
       continue;
     }
 
@@ -78,12 +79,11 @@ async function fetchEmails() {
       .limit(1);
 
     if (existing && existing.length > 0) {
-      console.log(`Skipped duplicate email with messageId: ${messageId}`);
       continue;
     }
 
     const text = parsed.text?.trim();
-    console.log('Parsed email text:', text);
+    // console.log('Parsed email text:', text);
 
     const loan = extractLoanFromText(text || '');
     if (loan) {
@@ -97,8 +97,6 @@ async function fetchEmails() {
       } else {
         console.log(`Inserted loan ${loan.loan_id}`);
       }
-    } else {
-      console.log('No valid loan data found in email.');
     }
   }
 
