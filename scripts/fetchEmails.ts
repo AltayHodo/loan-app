@@ -37,8 +37,10 @@ async function fetchEmails() {
   await connection.openBox('INBOX');
   console.log('INBOX opened');
 
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '-');
-  const searchCriteria = ['UNSEEN', ['SINCE', today]];
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const since = threeDaysAgo.toISOString().slice(0, 10).replace(/-/g, '-');
+  const searchCriteria = ['UNSEEN', ['SINCE', since]];
 
   const fetchOptions = {
     bodies: [''],
@@ -91,7 +93,7 @@ async function fetchEmails() {
     }
 
     const text = parsed.text?.trim();
-    console.log('Parsed email text:', text);
+    // console.log('Parsed email text:', text);
 
     const loan = extractLoanFromText(text || '');
     if (loan) {
@@ -106,7 +108,7 @@ async function fetchEmails() {
         console.log(`Inserted loan ${loan.loan_id}`);
       }
     } else {
-      console.log('No valid loan data found in email.');
+      // console.log('No valid loan data found in email.');
     }
   }
 
@@ -115,18 +117,30 @@ async function fetchEmails() {
 }
 
 function extractLoanFromText(text: string) {
-  const lines = text.split('\n').map((l) => l.trim());
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
   const get = (label: string) =>
     lines
-      .find((line) => line.startsWith(label))
-      ?.split(':')[1]
-      ?.trim();
+      .find((line) => line.toLowerCase().startsWith(label.toLowerCase()))
+      ?.split(':')
+      .slice(1)
+      .join(':')
+      .trim();
 
   const loan_id = get('Loan ID');
   const borrower_name = get('Borrower');
   const requested_amount = parseFloat(get('Requested') || '');
   const funded_amount = parseFloat(get('Funded') || '');
   const date = get('Date');
+
+  console.log('Parsed loan_id:', loan_id);
+  console.log(
+    'Requested:',
+    requested_amount,
+    'Funded:',
+    funded_amount,
+    'Date:',
+    date
+  );
 
   if (!loan_id || isNaN(requested_amount) || isNaN(funded_amount) || !date)
     return null;

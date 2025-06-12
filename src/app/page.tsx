@@ -50,7 +50,7 @@ export default function HomePage() {
               setIsRunningScript(true);
               try {
                 const res = await fetch(
-                  'https://loan-app-2bi1.onrender.com/run-email-script',
+                  process.env.NEXT_PUBLIC_BACKEND_URL || '/api/fetch-emails',
                   {
                     method: 'POST',
                   }
