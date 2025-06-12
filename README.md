@@ -14,7 +14,7 @@ Notes
   Funded: 2500
   Date: 2025-06-09
   ```
-- For deployment, the script being used is in backend/scripts/fetchEmails.js, not scripts/fetchEmails.ts. Typescript was causing some issues on deployment so I rewrote it in js
+- For deployment, the script being used is in backend/scripts/fetchEmails.js, not scripts/fetchEmails.ts. Deploying using NextJS API routes has some challenges so this was an easier solution
 
 ## Deployment/Demo
 Frontend (deployed on Vercel):** [https://loan-app-teal.vercel.app](https://loan-app-teal.vercel.app/)
