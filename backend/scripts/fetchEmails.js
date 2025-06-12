@@ -33,9 +33,9 @@ async function fetchEmails() {
   await connection.openBox('INBOX');
   console.log('INBOX opened');
 
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const since = oneWeekAgo.toISOString().slice(0, 10).replace(/-/g, '-');
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const since = threeDaysAgo.toISOString().slice(0, 10).replace(/-/g, '-');
   const searchCriteria = ['UNSEEN', ['SINCE', since]];
 
   const fetchOptions = {

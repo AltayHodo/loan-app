@@ -133,16 +133,6 @@ function extractLoanFromText(text: string) {
   const funded_amount = parseFloat(get('Funded') || '');
   const date = get('Date');
 
-  console.log('Parsed loan_id:', loan_id);
-  console.log(
-    'Requested:',
-    requested_amount,
-    'Funded:',
-    funded_amount,
-    'Date:',
-    date
-  );
-
   if (!loan_id || isNaN(requested_amount) || isNaN(funded_amount) || !date)
     return null;
 
