@@ -61,6 +61,8 @@ async function fetchEmails() {
     return;
   }
 
+  const parsedEmails = [];
+
   for (const m of messages) {
     const raw = m.parts.find((p) => p.which === '')?.body;
     if (!raw) continue;
@@ -69,23 +71,37 @@ async function fetchEmails() {
     const messageId = parsed.messageId;
 
     if (!messageId) {
+      console.log('Email skipped: missing messageId.');
       continue;
     }
 
-    const { data: existing, error: checkError } = await supabase
-      .from('loans')
-      .select('id')
-      .eq('message_id', messageId)
-      .limit(1);
+    parsedEmails.push({ parsed, messageId });
+  }
 
-    if (existing && existing.length > 0) {
+  const messageIds = parsedEmails.map((email) => email.messageId);
+
+  const { data: existingRows, error: batchError } = await supabase
+    .from('loans')
+    .select('message_id')
+    .in('message_id', messageIds);
+
+  if (batchError) {
+    console.error('Error checking existing message IDs:', batchError.message);
+    await connection.end();
+    return;
+  }
+
+  const existingIds = new Set(existingRows.map((row) => row.message_id));
+
+  for (const { parsed, messageId } of parsedEmails) {
+    if (existingIds.has(messageId)) {
+      console.log(`Skipped duplicate email with messageId: ${messageId}`);
       continue;
     }
 
     const text = parsed.text?.trim();
-    // console.log('Parsed email text:', text);
-
     const loan = extractLoanFromText(text || '');
+
     if (loan) {
       const { error } = await supabase.from('loans').insert({
         ...loan,
@@ -97,6 +113,10 @@ async function fetchEmails() {
       } else {
         console.log(`Inserted loan ${loan.loan_id}`);
       }
+    } else {
+      console.log(
+        `No valid loan data found in email with messageId: ${messageId}`
+      );
     }
   }
 
