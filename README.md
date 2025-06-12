@@ -14,7 +14,7 @@ Notes
   Funded: 2500
   Date: 2025-06-09
   ```
-- For deployment, the script being used is in backend/scripts/fetchEmails.js, not scripts/fetchEmails.ts. Deploying using NextJS API routes has some challenges so this was an easier solution
+- For deployment, the script being used is in backend/scripts/fetchEmails.js, not scripts/fetchEmails.ts. Deploying using NextJS API routes has some challenges, so this was an easier solution. 
 
 ## Deployment/Demo
 Frontend (deployed on Vercel):** [https://loan-app-teal.vercel.app](https://loan-app-teal.vercel.app/)
@@ -35,24 +35,17 @@ create table if not exists loans (
 ## Email Script
 Email script is in backend/scripts/fetchEmails.js
 
-## Manual setup instructions
-BACKEND
-1. navigate to backend/
-2. install dependencies with npm install
-3. create a .env file with this format:
-  IMAP_USER=your-email@example.com
-  IMAP_PASSWORD=your-email-password
-  IMAP_HOST=imap.yourmail.com
-  IMAP_PORT=993
-  SUPABASE_URL=https://your-project.supabase.co
-  SUPABASE_SERVICE_KEY=your-service-role-key
-4. run backend locally with node server.js
+## Manual setup instruction
+1. install dependencies with command npm install
+2. add a .env file with this format
+   ```
+   IMAP_USER=user
+   IMAP_PASSWORD=password
+   IMAP_HOST=imap.gmail.com
+   IMAP_PORT=portvalue
+   SUPABASE_URL=yoururl
+   SUPABASE_SERVICE_KEY=yourservicekey
+   ```
+3. start application with command npm run dev
 
-FRONTEND
-1. in root folder, install dependencies with npm install
-2. add .env.local file with this format:
-  NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-3. Update fetch URL in src/app/page.tsx if testing locally to- fetch('http://localhost:8080/run-email-script', { method: 'POST' })
-4. run app using npm run dev
 
