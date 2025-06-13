@@ -10,6 +10,7 @@ const { simpleParser } = require('mailparser');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
 const Papa = require('papaparse');
+const XLSX = require('xlsx');
 
 dotenv.config();
 
@@ -77,25 +78,34 @@ async function fetchEmails() {
     if (parsed.attachments?.length > 0) {
       for (const attachment of parsed.attachments) {
         const { filename, content } = attachment;
+        let rows: any[] = [];
 
         if (filename.endsWith('.csv')) {
           const parsedCsv = Papa.parse(content.toString(), {
             header: true,
             skipEmptyLines: true,
           });
+          rows = parsedCsv.data;
+        } else if (filename.endsWith('.xlsx')) {
+          const workbook = XLSX.read(content, { type: 'buffer' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          rows = XLSX.utils.sheet_to_json(worksheet);
+        } else {
+          continue;
+        }
 
-          for (const row of parsedCsv.data) {
-            const loan = extractLoanFromRow(row);
-            if (loan) {
-              const { error } = await supabase.from('loans').insert({
-                ...loan,
-              });
+        for (const row of rows) {
+          const loan = extractLoanFromRow(row);
+          if (loan) {
+            const { error } = await supabase.from('loans').insert({
+              ...loan,
+            });
 
-              if (error) {
-                console.log('Supabase insert error:', error.message);
-              } else {
-                console.log(`Inserted loan ${loan.loan_id}`);
-              }
+            if (error) {
+              console.log('Supabase insert error:', error.message);
+            } else {
+              console.log(`Inserted loan ${loan.loan_id}`);
             }
           }
         }
