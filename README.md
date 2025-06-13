@@ -7,7 +7,7 @@ Notes
 - To see script in action, you can delete all the loans and run the script using the buttons
 - Keep in mind that the script takes quite a while to run on deployment, give it some time
 - Can filter the loans by date
-- Currently only works on csv/xlsx files that have this structure-
+- Currently only works on csv/xlsx files that have this structure, with the columns Loan ID, Borrower, Requested, Funded, and Date -
   [mock_loans.xlsx](https://github.com/user-attachments/files/20733033/mock_loans.xlsx)
 - For deployment, the script being used is in backend/scripts/fetchEmails.js, not scripts/fetchEmails.ts. Deploying using NextJS API routes has some challenges, so this was an easier solution. 
 
