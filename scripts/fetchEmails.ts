@@ -9,6 +9,7 @@ const imaps = require('imap-simple');
 const { simpleParser } = require('mailparser');
 const dotenv = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
+const Papa = require('papaparse');
 
 dotenv.config();
 
@@ -31,12 +32,8 @@ const config = {
 };
 
 async function fetchEmails() {
-  console.log('Connecting to IMAP...');
   const connection = await imaps.connect(config);
-  console.log('Connected and logged in.');
-
   await connection.openBox('INBOX');
-  console.log('INBOX opened');
 
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
@@ -51,14 +48,13 @@ async function fetchEmails() {
   let messages = [];
 
   try {
-    console.log('Searching for recent unread messages...');
     messages = await connection.search(searchCriteria, fetchOptions);
     console.log(`Found ${messages.length} new unread message(s)`);
   } catch (err) {
     if (err instanceof Error) {
-      console.error('Error during search:', err.message);
+      console.log('Error during search:', err.message);
     } else {
-      console.error('Unknown error during search:', err);
+      console.log('Unknown error during search:', err);
     }
     await connection.end();
     return;
@@ -77,57 +73,33 @@ async function fetchEmails() {
     if (!raw) continue;
 
     const parsed = await simpleParser(raw);
-    const messageId = parsed.messageId;
 
-    if (!messageId) {
-      console.log('Email skipped: missing messageId.');
-      continue;
-    }
+    if (parsed.attachments?.length > 0) {
+      for (const attachment of parsed.attachments) {
+        const { filename, content } = attachment;
 
-    parsedEmails.push({ parsed, messageId });
-  }
+        if (filename.endsWith('.csv')) {
+          const parsedCsv = Papa.parse(content.toString(), {
+            header: true,
+            skipEmptyLines: true,
+          });
 
-  const messageIds = parsedEmails.map((email) => email.messageId);
+          for (const row of parsedCsv.data) {
+            const loan = extractLoanFromRow(row);
+            if (loan) {
+              const { error } = await supabase.from('loans').insert({
+                ...loan,
+              });
 
-  const { data: existingRows, error: batchError } = await supabase
-    .from('loans')
-    .select('message_id')
-    .in('message_id', messageIds);
-
-  if (batchError) {
-    console.error('Error checking existing message IDs:', batchError.message);
-    await connection.end();
-    return;
-  }
-
-  const existingIds = new Set(
-    existingRows.map((row: { message_id: any }) => row.message_id)
-  );
-
-  for (const { parsed, messageId } of parsedEmails) {
-    if (existingIds.has(messageId)) {
-      console.log(`Skipped duplicate email with messageId: ${messageId}`);
-      continue;
-    }
-
-    const text = parsed.text?.trim();
-    const loan = extractLoanFromText(text || '');
-
-    if (loan) {
-      const { error } = await supabase.from('loans').insert({
-        ...loan,
-        message_id: messageId,
-      });
-
-      if (error) {
-        console.error('Supabase insert error:', error.message);
-      } else {
-        console.log(`Inserted loan ${loan.loan_id}`);
+              if (error) {
+                console.log('Supabase insert error:', error.message);
+              } else {
+                console.log(`Inserted loan ${loan.loan_id}`);
+              }
+            }
+          }
+        }
       }
-    } else {
-      // console.log(
-      //   `No valid loan data found in email with messageId: ${messageId}`
-      // );
     }
   }
 
@@ -135,24 +107,22 @@ async function fetchEmails() {
   console.log('IMAP connection closed.');
 }
 
-function extractLoanFromText(text: string) {
-  const lines = text.split(/\r?\n/).map((l) => l.trim());
-  const get = (label: string) =>
-    lines
-      .find((line) => line.toLowerCase().startsWith(label.toLowerCase()))
-      ?.split(':')
-      .slice(1)
-      .join(':')
-      .trim();
+function extractLoanFromRow(row: any) {
+  const loan_id = row['Loan ID'];
+  const borrower_name = row['Borrower'];
+  const requested_amount = parseFloat(row['Requested']);
+  const funded_amount = parseFloat(row['Funded']);
+  const date = row['Date'];
 
-  const loan_id = get('Loan ID');
-  const borrower_name = get('Borrower');
-  const requested_amount = parseFloat(get('Requested') || '');
-  const funded_amount = parseFloat(get('Funded') || '');
-  const date = get('Date');
-
-  if (!loan_id || isNaN(requested_amount) || isNaN(funded_amount) || !date)
+  if (
+    !loan_id ||
+    !borrower_name ||
+    isNaN(requested_amount) ||
+    isNaN(funded_amount) ||
+    !date
+  ) {
     return null;
+  }
 
   return {
     loan_id,
