@@ -16,16 +16,15 @@ Frontend (deployed on Vercel):** [https://loan-app-teal.vercel.app](https://loan
 Backend (deployed on Render):** [https://loan-app-2bi1.onrender.com/](https://loan-app-2bi1.onrender.com/)
 
 ## Supabase Schema SQL
-create table if not exists loans (
-  id uuid default uuid_generate_v4() primary key,
+create table loans (
+  id uuid primary key default gen_random_uuid(),
   loan_id text not null,
   borrower_name text,
   requested_amount numeric,
   funded_amount numeric,
-  date date,
-  message_id text unique,
-  inserted_at timestamp with time zone default now()
+  date timestamp
 );
+
 
 ## Email Script
 Email script is in backend/scripts/fetchEmails.js
